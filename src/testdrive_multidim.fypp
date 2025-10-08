@@ -1,0 +1,234 @@
+#:set REAL_TYPES = ['sp','dp']
+#:set INT_TYPES  = ['i2','i4','i8']
+#:set RANKS = []
+#:set RANKS = RANKS + [{'DIMS':'1d', 'SHAPE':'(:)'    , 'N':1}]
+#:set RANKS = RANKS + [{'DIMS':'2d', 'SHAPE':'(:,:)'  , 'N':2}]
+#:set RANKS = RANKS + [{'DIMS':'3d', 'SHAPE':'(:,:,:)', 'N':3}]
+
+
+! Uncomment to have a submodule
+! Now these subroutines bodies will be included directly in testdrive.F90
+!submodule (testdrive) testdrive_multidim
+!  implicit none
+!
+!  double precision :: threshold_default = 1.e-6
+!
+!contains
+
+!======================
+! Integers: exact match
+!======================
+#:for KIND in INT_TYPES
+#:for RANK in RANKS
+!module subroutine check_equal_${KIND}$_${RANK['DIMS']}$( &
+subroutine check_equal_${KIND}$_${RANK['DIMS']}$( &
+      error, actual, expect, message, show &
+#:if RANK['N']==1
+    , indx1            &
+#:elif RANK['N']==2
+    , indx1, indx2        &
+#:else
+    , indx1, indx2, indx3    &
+#:endif
+)
+  type(error_type), allocatable, intent(out) :: error
+  integer(${KIND}$), intent(in) :: actual${RANK['SHAPE']}$
+  integer(${KIND}$), intent(in) :: expect${RANK['SHAPE']}$
+  character(len=*), intent(in), optional :: message
+  logical, intent(in), optional :: show
+  integer, intent(in), optional :: indx1(:)
+#:if RANK['N']>=2
+  integer, intent(in), optional :: indx2(:)
+#:endif
+#:if RANK['N']==3
+  integer, intent(in), optional :: indx3(:)
+#:endif
+
+  if (.not.all(shape(actual) == shape(expect))) then
+    if (present(message)) then
+      call test_failed(error, message)
+    else
+      call test_failed(error, "Array shape mismatch")
+    end if
+    return
+  end if
+
+  if (.not.all(actual == expect)) then
+    if (present(message)) then
+      call test_failed(error, message)
+    else
+      call test_failed(error, "Integer array mismatch")
+    end if
+  end if
+end subroutine
+
+
+#:endfor
+#:endfor
+
+!========================================
+! Reals: abs/rel threshold + optional NaN
+!========================================
+#:for KIND in REAL_TYPES
+#:for RANK in RANKS
+!module subroutine check_equal_${KIND}$_${RANK['DIMS']}$( &
+subroutine check_equal_${KIND}$_${RANK['DIMS']}$( &
+      error, actual, expect &
+    , message, thr, rel, show, nan_equal &
+#:if RANK['N']==1
+  , indx1              &
+#:elif RANK['N']==2
+  , indx1, indx2          &
+#:else
+  , indx1, indx2, indx3      &
+#:endif
+)
+  type(error_type), allocatable, intent(out) :: error
+    !! Test output
+  real(${KIND}$), intent(in) :: actual${RANK['SHAPE']}$
+    !! Array of obtained values
+  real(${KIND}$), intent(in) :: expect${RANK['SHAPE']}$
+    !! Array of expected values
+  character(len=*), intent(in), optional :: message
+    !! Message when test fails
+  real(${KIND}$)  , intent(in), optional :: thr
+    !! Equivalence tolerance for reals in absolute value
+  logical         , intent(in), optional :: rel
+    !! Equivalence tolerance for real in relative value
+  logical         , intent(in), optional :: show
+    !! Show the arrays in the message output
+  logical         , intent(in), optional :: nan_equal 
+    !! Manage NaN values.
+    !!  .false. (default): any NaN anywhere results in a mismatch (fail).
+    !!  .true.: a pair of NaNs at the same positions is treated as equal and ignored for the tolerance check.
+  integer, intent(in), optional :: indx1(:)
+    !! Compare only selected indices in the 1st dim
+#:if RANK['N']>=2
+  integer, intent(in), optional :: indx2(:)
+    !! Compare only selected indices in the 2nd dim
+#:endif
+#:if RANK['N']==3
+  integer, intent(in), optional :: indx3(:)
+    !! Compare only selected indices in the 3rd dim
+#:endif
+  ! Manage optional arguments
+  character(len=:), allocatable :: msg
+  real(${KIND}$) :: threshold
+  logical :: relative
+  logical :: show_array
+
+  logical :: ok, allow_nan, nan_ok
+
+  ! Other 
+  double precision, allocatable :: arr(:,:)
+  logical, allocatable :: mask(:,:)
+  integer :: n1, n2, n3 ! bounds (per-rank)
+
+  ! Check arguments
+  if (any(shape(actual) /= shape(expect))) then
+    print *, "X Arrays have different shapes."
+    return
+  end if
+
+  ! Manage optional arguments
+  threshold = epsilon(1.0_${KIND}$)
+  if (present(thr)) threshold = thr
+
+  relative = .false.
+  if (present(rel)) relative = rel
+  
+  nan_ok   = .false.
+  if (present(nan_equal)) nan_ok = nan_equal
+
+  if (present(show)) then 
+    show_array = show
+  else
+    show_array = .True.
+  end if
+
+  ! bound checks
+  n1 = size(actual,1)
+#:if RANK['N']>=2
+  n2 = size(actual,2)
+#:endif
+#:if RANK['N']==3
+  n3 = size(actual,3)
+#:endif
+  if (present(indx1)) then
+    if (size(indx1)==0 .or. any(indx1<1 .or. indx1>n1)) then
+      call test_failed(error, "Index indx1 out of bounds"); return
+    end if
+  end if
+#:if RANK['N']>=2
+  if (present(indx2)) then
+    if (size(indx2)==0 .or. any(indx2<1 .or. indx2>n2)) then
+      call test_failed(error, "Index indx2 out of bounds"); return
+    end if
+  end if
+#:endif
+#:if RANK['N']==3
+  if (present(indx3)) then
+    if (size(indx3)==0 .or. any(indx3<1 .or. indx3>n3)) then
+      call test_failed(error, "Index indx3 out of bounds"); return
+    end if
+  end if
+#:endif
+
+
+  if (present(message)) then
+    allocate(character(len=len_trim(message)) :: msg)
+    msg = trim(message)
+  else
+    msg = "Difference is: "
+  end if
+
+  if (present(rel)) then
+    relative = rel
+  else
+    relative = .false.
+  end if
+
+  ! Check shape compatibility
+  if (.not.all(shape(actual) == shape(expect))) then
+    if (present(message)) then
+      call test_failed(error, message)
+    else
+      call test_failed(error, "Array shape mismatch")
+    end if
+    return
+  end if
+
+  ! Check compatibility when NaN are absent
+  if (relative) then
+    ! Relative criterion: abs(a-b)/abs(b) <= thr
+    ok = all( (abs(actual - expect) / abs(expect)) <= threshold )
+  else
+    ! Absolute criterion: abs(a-b) <= thr
+    ok = all( abs(actual - expect) <= threshold )
+  end if
+
+  ! Check compatibility in presence of NaN
+  if (.not.ok .and. allow_nan) then
+    ! Manage
+    ok = all( &
+          (relative .and. (abs(actual - expect) / abs(expect) <= threshold)) .or. & ! Relative
+          ((.not.relative) .and. (abs(actual - expect) <= threshold)) .or. &        ! Absolute
+          (is_nan(actual) .and. is_nan(expect)) &                                   ! NaN
+          )
+  end if
+
+  if (.not.ok) then
+    if (present(message)) then
+      call test_failed(error, message)
+    else
+      call test_failed(error, "Real array mismatch")
+    end if
+  end if
+end subroutine
+
+
+#:endfor
+#:endfor
+
+!end submodule testdrive_multidim
+

@@ -1,0 +1,27 @@
+#:set REAL_TYPES = ['sp','dp']
+#:set INT_TYPES  = ['i2','i4','i8']
+#:set RANKS = []
+#:set RANKS = RANKS + [{'DIMS':'1d', 'SHAPE':'(:)'    , 'N':1}]
+#:set RANKS = RANKS + [{'DIMS':'2d', 'SHAPE':'(:,:)'  , 'N':2}]
+#:set RANKS = RANKS + [{'DIMS':'3d', 'SHAPE':'(:,:,:)', 'N':3}]
+
+
+  !---- interfaces for the main module ----
+  interface check_equal
+  
+    #:for KIND in INT_TYPES
+    #:for RANK in RANKS
+    module procedure check_equal_${KIND}$_${RANK['DIMS']}$
+    #:endfor
+    #:endfor
+  
+    #:for KIND in REAL_TYPES
+    #:for RANK in RANKS
+    module procedure check_equal_${KIND}$_${RANK['DIMS']}$
+    #:endfor
+    #:endfor
+  
+  end interface check_equal
+
+  public :: check_equal
+  

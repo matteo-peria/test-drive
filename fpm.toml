@@ -6,3 +6,8 @@ author = ["Sebastian Ehlert"]
 copyright = "2020-2021 Sebastian Ehlert"
 description = "The simple testing framework"
 keywords = ["testing-framework", "unit-testing"]
+[library]
+source-dir = "src"
+include-dir = ["src"]
+[build]
+auto-tests = true

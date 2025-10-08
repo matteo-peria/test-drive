@@ -400,9 +400,14 @@ module testdrive
   character(len=*), parameter :: fmt = '(1x, *(1x, a))'
   character(len=*), parameter :: newline = new_line("a")
 
+  !! Interfaces of the procedures defined in the multidim submodule
+  include "testdrive_multidim_interface.inc"
+  ! Declarations of the procedures defined in the multidim submodule
+  !include "testdrive_multidim_stubs.inc"
 
 contains
 
+  include "testdrive_multidim.inc"
 
   !> Driver for testsuite
   recursive subroutine run_testsuite(collect, unit, stat, parallel, junit)

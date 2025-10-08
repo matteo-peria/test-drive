@@ -19,6 +19,7 @@ program tester
     & init_color_output
   use test_check, only : collect_check
   use test_select, only : collect_select
+  use test_multidim, only : collect_check_equal
   implicit none
   integer :: stat, is
   character(len=:), allocatable :: suite_name, test_name
@@ -30,8 +31,9 @@ program tester
   call junit_header(junit, "testdrive")
 
   testsuites = [ &
-    new_testsuite("check", collect_check), &
-    new_testsuite("select", collect_select) &
+      new_testsuite("check", collect_check)   &
+    , new_testsuite("select", collect_select) &
+    , new_testsuite("check_equal", collect_check_equal) &
     ]
 
   call get_argument(1, suite_name)
