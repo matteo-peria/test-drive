@@ -18,15 +18,15 @@ contains
 subroutine collect_check_equal(testsuite)
   type(unittest_type), allocatable, intent(out) :: testsuite(:)
   testsuite = [ &
-    new_unittest("int_1d_equal_pass",        int_1d_equal_pass), &
-    new_unittest("int_2d_equal_pass",        int_2d_equal_pass), &
-    new_unittest("int_2d_mismatch_fail",     int_2d_mismatch_fail, should_fail=.true.), &
-    new_unittest("real_sp_1d_tol_pass",      real_sp_1d_tol_pass), &
-    new_unittest("real_dp_1d_rel_tol_pass",  real_dp_1d_rel_tol_pass), &
-    new_unittest("real_dp_1d_nan_equal_pass", real_dp_1d_nan_equal_pass), &
-    new_unittest("real_sp_subset_rows_cols", real_sp_subset_rows_cols), &
-    new_unittest("real_dp_3d_equal_pass",    real_dp_3d_equal_pass), &
-    new_unittest("shape_mismatch_fail",      shape_mismatch_fail, should_fail=.true.) &
+    new_unittest("int_1d_equal_pass",         int_1d_equal_pass), &
+    new_unittest("int_2d_equal_pass",         int_2d_equal_pass), &
+    new_unittest("int_2d_mismatch_fail",      int_2d_mismatch_fail, should_fail=.true.), &
+    new_unittest("real_sp_1d_tol_pass",       real_sp_1d_tol_pass), &
+    new_unittest("real_dp_1d_rel_tol_pass",   real_dp_1d_rel_tol_pass), &
+    new_unittest("real_dp_1d_nan_equal_pass", real_dp_1d_nan_equal_pass), & !
+    new_unittest("real_sp_subset_rows_cols",  real_sp_subset_rows_cols), &  !
+    new_unittest("real_dp_3d_equal_pass",     real_dp_3d_equal_pass), &
+    new_unittest("shape_mismatch_fail",       shape_mismatch_fail, should_fail=.true.) &
   ]
 end subroutine collect_check_equal
 
